@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>World Clock - Onion Clock | Crafting Time, Shaping Tommorrow's Solutions</title>
+
+<!-- Fonts & icons -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+  :root{
+    --bg1: #120021;
+    --bg2: #6a00f4;
+    --accent:#ff8fb1;
+    --muted: rgba(255,255,255,0.78);
+    --glass: rgba(255,255,255,0.04);
+    --glass-2: rgba(255,255,255,0.02);
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:#fff;-webkit-font-smoothing:antialiased}
+
+  /* Page background */
+  body{
+    background:
+      radial-gradient(800px 400px at 10% 10%, rgba(168,72,255,0.08), transparent),
+      linear-gradient(180deg,var(--bg1), #1b0220 70%);
+    overflow-x:hidden;
+    padding: 0;
+  }
+
+  /* Floating nav */
+  .nav {
+    position:fixed;
+    top:18px;
+    left:50%;
+    transform:translateX(-50%);
+    width:calc(100% - 64px);
+    max-width:1200px;
+    z-index:60;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 18px;
+    border-radius:12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    backdrop-filter: blur(6px);
+  }
+
+  .nav .brand { display:flex; align-items:center; gap:12px; }
+  .logo {
+    width:44px;height:44px;border-radius:10px;
+    display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--accent), #b07af3);
+    color:#210012;font-weight:700;font-size:18px;
+    box-shadow:0 6px 18px rgba(176,122,243,0.08);
+  }
+  .nav .links { display:flex; gap:16px; align-items:center; }
+  .nav a {
+    color:var(--muted); text-decoration:none; font-weight:600; font-size:0.95rem;
+    padding:8px 10px; border-radius:8px;
+  }
+  .nav a:hover{ background:rgba(255,255,255,0.03); color:#fff; }
+
+  /* Navigation dropdown */
+  nav ul {
+    list-style: none;
+    display: flex;
+    margin: 0;
+    padding: 0;
+  }
+  nav ul li {
+    position: relative;
+    margin: 0 8px;
+  }
+  nav ul li ul {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: rgba(106, 13, 173, 0.85);
+    border-radius: 6px;
+    overflow: hidden;
+    min-width: 180px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    backdrop-filter: blur(8px);
+  }
+  nav ul li ul li {
+    margin: 0;
+  }
+  nav ul li ul li a {
+    padding: 10px 15px;
+    font-size: 0.95rem;
+    display: block;
+    color: var(--muted);
+  }
+  nav ul li:hover ul {
+    display: block;
+  }
+
+  /* Main content area */
+  .main-content {
+    padding-top: 100px;
+    text-align: center;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+    font-family: 'Playfair Display', serif;
+  }
+
+  .clock-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    max-width: 1400px;
+    margin: 30px auto;
+  }
+
+  .clock-card {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    backdrop-filter: blur(6px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .clock-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+  }
+
+  .city {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #ffd6ff;
+  }
+
+  .time {
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: #ffe6ff;
+    text-shadow: 0 0 10px #ff99ff, 0 0 20px #ff66ff;
+    font-family: 'Orbitron', monospace;
+    letter-spacing: 2px;
+  }
+
+  .date {
+    font-size: 0.95rem;
+    margin-top: 6px;
+    opacity: 0.85;
+  }
+
+  /* Default paragraph styling */
+  p {
+    font-family: Inter, "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--muted);
+    background: rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 16px 18px;
+    max-width: 720px;
+    margin: 18px auto;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.28);
+    letter-spacing: 0.1px;
+    text-align: left;
+    transition: transform .25s ease, box-shadow .25s ease, opacity .25s ease;
+    opacity: 0;
+    transform: translateY(8px);
+    animation: fadeUp 600ms ease forwards;
+  }
+
+  p.lead {
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  p.muted {
+    background: transparent;
+    color: rgba(255,255,255,0.8);
+    box-shadow: none;
+    padding: 6px 0;
+    margin: 8px 0;
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  /* Fade-up animation */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Scroll bar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #aa66ff;
+    border-radius: 4px;
+  }
+
+  button {
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--accent), #ff7aa3);
+    color: #120212;
+    font-weight: bold;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.45);
+  }
+
+  button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(255,255,255,0.7);
+  }
+
+  /* Responsive */
+  @media (max-width:980px){
+    .nav{ left:12px; transform:none; width:calc(100% - 24px) }
+    .main-content { padding-top: 120px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    p { transition: none; animation: none; transform: none; }
+  }
+
+  @media (max-width: 420px) {
+    p { padding: 12px; font-size: 0.97rem; max-width: 92vw; }
+  }
+
+  /* Footer Styles */
+  .footer { 
+    background: rgba(255,255,255,0.05);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    color: #ffffff;
+    padding: 40px 20px;
+    text-align: center;
+    margin-top: 60px;
+    backdrop-filter: blur(10px);
+  }
+  
+  .footer-content {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .social-icons {
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .social-icons a {
+    color: rgba(255,255,255,0.8);
+    font-size: 1.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.08);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  
+  .social-icons a:hover {
+    transform: translateY(-2px);
+    background: rgba(255,255,255,0.15);
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  }
+  
+  .footer-brand {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 20px 0 10px 0;
+    color: #ffffff;
+  }
+  
+  .footer-links {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.6;
+    margin: 15px 0;
+  }
+  
+  .footer p {
+    color: inherit;
+    margin: 0;
+    font-weight: 400;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    animation: none;
+    opacity: 1;
+    transform: none;
+    max-width: none;
+    text-align: center;
+  }
+  
+  .footer a {
+    color: rgba(255,255,255,0.85);
+    text-decoration: none;
+    transition: color 0.3s ease;
+    font-weight: 500;
+  }
+  
+  .footer a:hover {
+    color: var(--accent);
+  }
+  
+  .footer-separator {
+    color: rgba(255,255,255,0.4);
+    margin: 0 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" role="navigation" aria-label="Main">
+  <div class="brand">
+    <div class="logo">🧅</div>
+    <div style="display:flex;flex-direction:column;line-height:1">
+      <div style="font-weight:700">Onion Clock</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:-2px">Precision • Design • Personality</div>
+    </div>
+  </div>
+
+  <div class="links" role="menubar" aria-label="Primary links">
+    <a href="index.html">Home</a>
+    <a href="alarm.html">Alarm Clock</a>
+    <a href="stop-watch.html">Stopwatch</a>
+    <a href="timer.html">Countdown Timer</a>
+    <a href="world-clock.html">World Clock</a>    
+    <a href="contact.html">Contact</a>
+    <ul><li><a href="#">Tools ▾</a>
+      <ul>
+        <li><a href="alarm.html">Alarm Clock</a></li>
+        <li><a href="stop-watch.html">Stopwatch</a></li>
+        <li><a href="timer.html">Countdown Timer</a></li>
+        <li><a href="world-clock.html">World Clock</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+        <li><a href="about.html">About Onion Clock</a></li>
+      </ul>
+    </li></ul>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+  <h1>🌍 Onion Clock - Global Time</h1>
+
+  <p>Solutions in a blink — your window to the world's heartbeat. Live times from every continent, updated every second… so you'll always know exactly when to call your friend in Australia and ruin their 3 a.m. beauty sleep.</p>
+
+  <div class="clock-grid" id="worldClocks">
+    <!-- Clocks will be added dynamically -->
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer id="contact" class="footer" role="contentinfo">
+  <div class="footer-content">
+    <div class="social-icons">
+      <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+      <a href="#" aria-label="Discord"><i class="fab fa-discord"></i></a>
+      <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+    </div>
+    
+    <div class="footer-brand">
+      <p>2025 Onion Clock • Designed by <a href="http://x.com/ultrap_ceo">Ultrap</a></p>
+    </div>
+    
+    <div class="footer-links">
+      <p>
+        <a href="about.html">About Us</a>
+        <span class="footer-separator">•</span>
+        <a href="contact.html">Contact Us</a>
+        <span class="footer-separator">•</span>
+        <a href="terms.html">Terms Of Use</a>
+        <span class="footer-separator">•</span>
+        <a href="privacy.html">Privacy</a>
+      </p>
+      <p style="margin-top: 10px; font-size: 0.85rem; color: rgba(255,255,255,0.6);">
+        © 2025 Onion Clock. All rights reserved.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<script>
+    const cities = [
+        // North America
+        { name: "New York, USA", timezone: "America/New_York" },
+        { name: "Los Angeles, USA", timezone: "America/Los_Angeles" },
+        { name: "Toronto, Canada", timezone: "America/Toronto" },
+        { name: "Mexico City, Mexico", timezone: "America/Mexico_City" },
+        // South America
+        { name: "São Paulo, Brazil", timezone: "America/Sao_Paulo" },
+        { name: "Buenos Aires, Argentina", timezone: "America/Argentina/Buenos_Aires" },
+        { name: "Lima, Peru", timezone: "America/Lima" },
+        // Europe
+        { name: "London, UK", timezone: "Europe/London" },
+        { name: "Paris, France", timezone: "Europe/Paris" },
+        { name: "Berlin, Germany", timezone: "Europe/Berlin" },
+        { name: "Moscow, Russia", timezone: "Europe/Moscow" },
+        // Africa
+        { name: "Lagos, Nigeria", timezone: "Africa/Lagos" },
+        { name: "Cairo, Egypt", timezone: "Africa/Cairo" },
+        { name: "Cape Town, South Africa", timezone: "Africa/Johannesburg" },
+        { name: "Nairobi, Kenya", timezone: "Africa/Nairobi" },
+        // Asia
+        { name: "Dubai, UAE", timezone: "Asia/Dubai" },
+        { name: "Mumbai, India", timezone: "Asia/Kolkata" },
+        { name: "Beijing, China", timezone: "Asia/Shanghai" },
+        { name: "Tokyo, Japan", timezone: "Asia/Tokyo" },
+        { name: "Singapore", timezone: "Asia/Singapore" },
+        // Oceania
+        { name: "Sydney, Australia", timezone: "Australia/Sydney" },
+        { name: "Auckland, New Zealand", timezone: "Pacific/Auckland" },
+        { name: "Honolulu, Hawaii", timezone: "Pacific/Honolulu" }
+    ];
+
+    function updateClocks() {
+        const container = document.getElementById("worldClocks");
+        container.innerHTML = "";
+
+        cities.forEach(city => {
+            const now = new Date();
+            const options = { timeZone: city.timezone, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+            const dateOptions = { timeZone: city.timezone, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+
+            const timeString = now.toLocaleTimeString([], options);
+            const dateString = now.toLocaleDateString([], dateOptions);
+
+            const card = document.createElement("div");
+            card.className = "clock-card";
+            card.innerHTML = `
+                <div class="city">${city.name}</div>
+                <div class="time">${timeString}</div>
+                <div class="date">${dateString}</div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    setInterval(updateClocks, 1000);
+    updateClocks();
+
+    // Enhanced nav shadow on scroll
+    const nav = document.querySelector('.nav');
+    window.addEventListener('scroll', () => {
+        const y = window.scrollY;
+        if(y > 24) nav.style.boxShadow = '0 18px 40px rgba(0,0,0,0.6)';
+        else nav.style.boxShadow = '0 8px 30px rgba(0,0,0,0.5)';
+    });
+</script>
+
+</body>
+</html>

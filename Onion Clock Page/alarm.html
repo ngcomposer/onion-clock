@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Set Alarm - Onion Clock | Crafting Time, Shaping Tommorrow's Solutions</title>
+
+<!-- Fonts & icons -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+  :root{
+    --bg1: #120021;
+    --bg2: #6a00f4;
+    --accent:#ff8fb1;
+    --muted: rgba(255,255,255,0.78);
+    --glass: rgba(255,255,255,0.04);
+    --glass-2: rgba(255,255,255,0.02);
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:#fff;-webkit-font-smoothing:antialiased}
+
+  /* Page background */
+  body{
+    background:
+      radial-gradient(800px 400px at 10% 10%, rgba(168,72,255,0.08), transparent),
+      linear-gradient(180deg,var(--bg1), #1b0220 70%);
+    overflow-x:hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Floating nav */
+  .nav {
+    position:fixed;
+    top:18px;
+    left:50%;
+    transform:translateX(-50%);
+    width:calc(100% - 64px);
+    max-width:1200px;
+    z-index:60;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 18px;
+    border-radius:12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    backdrop-filter: blur(6px);
+  }
+
+  .nav .brand { display:flex; align-items:center; gap:12px; }
+  .logo {
+    width:44px;height:44px;border-radius:10px;
+    display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--accent), #b07af3);
+    color:#210012;font-weight:700;font-size:18px;
+    box-shadow:0 6px 18px rgba(176,122,243,0.08);
+  }
+  .nav .links { display:flex; gap:16px; align-items:center; }
+  .nav a {
+    color:var(--muted); text-decoration:none; font-weight:600; font-size:0.95rem;
+    padding:8px 10px; border-radius:8px;
+  }
+  .nav a:hover{ background:rgba(255,255,255,0.03); color:#fff; }
+
+  /* Dropdown navigation */
+  .nav ul { list-style:none; margin:0; padding:0; position:relative; }
+  .nav ul li { position:relative; }
+  .nav ul li ul {
+    display:none; position:absolute; top:100%; left:0; 
+    background:rgba(106,13,173,0.85); border-radius:8px; 
+    min-width:180px; box-shadow:0 8px 30px rgba(0,0,0,0.4);
+    backdrop-filter:blur(8px);
+  }
+  .nav ul li ul li { margin:0; }
+  .nav ul li ul li a { padding:10px 15px; font-size:0.9rem; }
+  .nav ul li:hover ul { display:block; }
+
+  /* Main content area */
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 20px 40px;
+    text-align: center;
+  }
+
+  /* Alarm styles */
+  h1 {
+    margin-bottom: 20px;
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+    font-family: Playfair Display, serif;
+  }
+
+  .clock {
+    font-size: 60px;
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-shadow: 0 0 15px rgba(255,255,255,0.5);
+    transition: all 0.3s ease;
+    font-family: 'Orbitron', monospace;
+  }
+
+  /* Alarm glow effect */
+  @keyframes alarmGlow {
+    0% { text-shadow: 0 0 20px #ff0000, 0 0 40px #ff4d4d; color: #ff4d4d; }
+    50% { text-shadow: 0 0 20px #ffff00, 0 0 40px #ffcc00; color: #ffcc00; }
+    100% { text-shadow: 0 0 20px #00ff00, 0 0 40px #33ff33; color: #33ff33; }
+  }
+
+  .clock.alarm-active {
+    animation: alarmGlow 1s infinite alternate;
+  }
+
+  .alarm-container {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 25px;
+    border-radius: 15px;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+    max-width: 500px;
+    width: 100%;
+  }
+
+  input, select, button {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+  }
+
+  input, select {
+    background: rgba(255,255,255,0.9);
+    color: #333;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  button {
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--accent), #ff7aa3);
+    color: #120212;
+    font-weight: bold;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+  }
+
+  button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(255,143,177,0.4);
+  }
+
+  /* Paragraph styling */
+  p {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: var(--muted);
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 16px 18px;
+    max-width: 720px;
+    margin: 18px auto;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.28);
+  }
+
+  /* CTA footer */
+  .cta-footer { 
+    max-width:1200px; margin:36px auto; padding:26px; 
+    display:flex; gap:18px; align-items:center; justify-content:space-between; 
+    border-radius:14px; 
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); 
+    box-shadow:0 14px 50px rgba(0,0,0,0.45); 
+  }
+  .cta-footer .left { display:flex; gap:12px; align-items:center; }
+
+  /* Enhanced Footer Styles - From World Clock */
+  .footer { 
+    background: rgba(255,255,255,0.05);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    color: #ffffff;
+    padding: 40px 20px;
+    text-align: center;
+    margin-top: 60px;
+    backdrop-filter: blur(10px);
+  }
+  
+  .footer-content {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .social-icons {
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .social-icons a {
+    color: rgba(255,255,255,0.8);
+    font-size: 1.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.08);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  
+  .social-icons a:hover {
+    transform: translateY(-2px);
+    background: rgba(255,255,255,0.15);
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  }
+  
+  .footer-brand {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 20px 0 10px 0;
+    color: #ffffff;
+  }
+  
+  .footer-links {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.6;
+    margin: 15px 0;
+  }
+  
+  .footer p {
+    color: inherit;
+    margin: 0;
+    font-weight: 400;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    animation: none;
+    opacity: 1;
+    transform: none;
+    max-width: none;
+    text-align: center;
+  }
+  
+  .footer a {
+    color: rgba(255,255,255,0.85);
+    text-decoration: none;
+    transition: color 0.3s ease;
+    font-weight: 500;
+  }
+  
+  .footer a:hover {
+    color: var(--accent);
+  }
+  
+  .footer-separator {
+    color: rgba(255,255,255,0.4);
+    margin: 0 8px;
+  }
+
+  @media (max-width:980px){
+    .nav{ left:12px; transform:none; width:calc(100% - 24px) }
+    .cta-footer{ flex-direction:column; align-items:flex-start; gap:12px }
+    .main-content { padding: 100px 15px 20px; }
+    h1 { font-size: 2rem; }
+    .clock { font-size: 48px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" role="navigation" aria-label="Main">
+  <div class="brand">
+    <div class="logo">🧅</div>
+    <div style="display:flex;flex-direction:column;line-height:1">
+      <div style="font-weight:700">Onion Clock</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:-2px">Precision • Design • Personality</div>
+    </div>
+  </div>
+
+  <div class="links" role="menubar" aria-label="Primary links">
+    <a href="index.html">Home</a>
+    <a href="alarm.html">Alarm Clock</a>
+    <a href="stop-watch.html">Stopwatch</a>
+    <a href="timer.html">Countdown Timer</a>
+    <a href="world-clock.html">World Clock</a>    
+    <a href="#timeline">Our Story</a>
+    <a href="contact.html">Contact</a>
+    <ul><li><a href="#">Tools ▾</a>
+      <ul>
+        <li><a href="alarm.html">Alarm Clock</a></li>
+        <li><a href="stop-watch.html">Stopwatch</a></li>
+        <li><a href="timer.html">Countdown Timer</a></li>
+        <li><a href="world-clock.html">World Clock</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+        <li><a href="about.html">About Onion Clock</a></li>
+      </ul>
+    </li></ul>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<div class="main-content">
+  <h1>⏱ Set Alarm Clock</h1>
+  <p>With Onion Clock, you're not just setting an alarm - you're upgrading your daily routine with style, fashion, consistency, precision, and personality.</p>
+  
+  <div class="clock" id="currentTime">00:00:00</div>
+
+  <div class="alarm-container">
+    <h2>Set Alarm</h2>
+    <input type="text" id="alarmTitle" placeholder="Alarm Title"><br>
+    
+    <label>Hour:</label>
+    <select id="alarmHour"></select>
+    
+    <label>Minute:</label>
+    <select id="alarmMinute"></select>
+
+    <label>Second:</label>
+    <select id="alarmSecond"></select>
+    <br>
+    
+    <label>Choose Ringtone:</label>
+    <select id="alarmSound">
+        <option value="messagefromgod.mp3">Message From God Alarm Tune</option>
+        <option value="twirlingalarm.mp3">Twirling Alarm Tune</option>
+        <option value="wakeupalarmtone.mp3">Wake Up Alarm Tune</option>
+        <option value="freakingalarm.mp3">Freaking Alarm Tune</option>
+	<option value="candy-shop.mp3">Candy Shop Alarm Tune</option>
+	<option value="drumstep-vibe.mp3">Drumstep Vibe Alarm Tune</option>
+	<option value="funny-hen-alarm.mp3">Funny Hen Alarm Tune</option>
+	<option value="kgf-heart-touching.mp3">Heart Touching Alarm Tune</option>
+	<option value="trap-vibe.mp3">Trap Vibe Alarm Tune</option>
+	<option value="whereare-nowwithjustinbieber.mp3">Where Are ? Alarm Tune</option>
+	
+    </select><br>
+    
+    <button id="setAlarm">Set Alarm</button>
+    <button id="testAlarm">Test Alarm</button>
+  </div>
+</div>
+
+<audio id="alarmAudio"></audio>
+
+<!-- CTA FOOTER -->
+<section class="cta-footer" aria-label="Call to action">
+  <div class="left">
+    <div class="logo" style="width:56px;height:56px;border-radius:12px;font-size:22px">🧅</div>
+    <div>
+      <div style="font-weight:700">Onion Clock — Start your finest morning</div>
+      <div style="color:var(--muted); font-size:13px">Precision tools for a tasteful routine</div>
+    </div>
+  </div>
+
+  <div class="right">
+    <button class="btn primary" onclick="alert('Thanks! Try Onion Clock features on the site.')">Try Onion Clock</button>
+    <button class="btn ghost" onclick="scrollToSection('#contact')">Contact Us</button>
+  </div>
+</section>
+
+<!-- ENHANCED FOOTER -->
+<footer id="contact" class="footer" role="contentinfo">
+  <div class="footer-content">
+    <div class="social-icons">
+      <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+      <a href="#" aria-label="Discord"><i class="fab fa-discord"></i></a>
+      <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+    </div>
+    
+    <div class="footer-brand">
+      <p>2025 Onion Clock • Designed by <a href="http://x.com/ultrap_ceo">Ultrap</a></p>
+    </div>
+    
+    <div class="footer-links">
+      <p>
+        <a href="about.html">About Us</a>
+        <span class="footer-separator">•</span>
+        <a href="contact.html">Contact Us</a>
+        <span class="footer-separator">•</span>
+        <a href="terms.html">Terms Of Use</a>
+        <span class="footer-separator">•</span>
+        <a href="privacy.html">Privacy</a>
+      </p>
+      <p style="margin-top: 10px; font-size: 0.85rem; color: rgba(255,255,255,0.6);">
+        © 2025 Onion Clock. All rights reserved.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<!-- JavaScript -->
+<script>
+// Populate hours, minutes, seconds
+const hourSelect = document.getElementById("alarmHour");
+const minuteSelect = document.getElementById("alarmMinute");
+const secondSelect = document.getElementById("alarmSecond");
+
+for (let i = 0; i < 24; i++) {
+    hourSelect.innerHTML += `<option value="${i}">${String(i).padStart(2,"0")}</option>`;
+}
+for (let i = 0; i < 60; i++) {
+    minuteSelect.innerHTML += `<option value="${i}">${String(i).padStart(2,"0")}</option>`;
+    secondSelect.innerHTML += `<option value="${i}">${String(i).padStart(2,"0")}</option>`;
+}
+
+let alarmTime = null;
+let alarmTitle = "";
+let alarmSound = "";
+const clockDisplay = document.getElementById("currentTime");
+const alarmAudio = document.getElementById("alarmAudio");
+
+function updateClock() {
+    let now = new Date();
+    let hrs = String(now.getHours()).padStart(2,"0");
+    let mins = String(now.getMinutes()).padStart(2,"0");
+    let secs = String(now.getSeconds()).padStart(2,"0");
+    clockDisplay.innerText = `${hrs}:${mins}:${secs}`;
+    
+    if (alarmTime === `${hrs}:${mins}:${secs}`) {
+        clockDisplay.classList.add("alarm-active");
+        alarmAudio.src = alarmSound;
+        alarmAudio.play();
+        alert(`⏰ Alarm: ${alarmTitle || "No Title"}`);
+    }
+}
+
+document.getElementById("setAlarm").addEventListener("click", () => {
+    let hour = document.getElementById("alarmHour").value;
+    let minute = document.getElementById("alarmMinute").value;
+    let second = document.getElementById("alarmSecond").value;
+    alarmTitle = document.getElementById("alarmTitle").value;
+    alarmSound = document.getElementById("alarmSound").value;
+    alarmTime = `${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}:${String(second).padStart(2,"0")}`;
+    clockDisplay.classList.remove("alarm-active");
+    alert(`Alarm set for ${alarmTime} - ${alarmTitle}`);
+});
+
+document.getElementById("testAlarm").addEventListener("click", () => {
+    clockDisplay.classList.add("alarm-active");
+    alarmAudio.src = document.getElementById("alarmSound").value;
+    alarmAudio.play();
+    alert(`🔊 Testing Alarm: ${document.getElementById("alarmTitle").value || "No Title"}`);
+});
+
+// Smooth scroll helper
+function scrollToSection(sel){
+  const el = document.querySelector(sel);
+  if(!el) return;
+  el.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+// Navigation shadow on scroll
+const nav = document.querySelector('.nav');
+window.addEventListener('scroll', () => {
+  const y = window.scrollY;
+  if(y > 24) nav.style.boxShadow = '0 18px 40px rgba(0,0,0,0.6)';
+  else nav.style.boxShadow = '0 8px 30px rgba(0,0,0,0.5)';
+});
+
+setInterval(updateClock, 1000);
+</script>
+
+</body>
+</html>
